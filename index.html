@@ -22,10 +22,39 @@
       requestCameraPermission();
     }
 
+    async function downloadFileAndHash(url) {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Failed to download file from ${url}, status: ${response.status}`);
+      }
+      
+      const arrayBuffer = await response.arrayBuffer();
+      const data = new Uint8Array(arrayBuffer);
+      
+      // 파일 데이터를 해싱하여 파일명 생성
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
+      
+      // 확장자 추출
+      const fileExtension = url.split('.').pop();
+      
+      // 해시된 파일명 생성
+      const hashedFileName = `${hashHex}.${fileExtension}`;
+      
+      // 파일을 로컬에 저장 (FS_createDataFile 함수 포함)
+      cv.FS_createDataFile('/', hashedFileName, data, true, false, false);
+      console.log(`다운로드 및 해싱 완료. 해시된 파일명: ${hashedFileName}`);
+      
+      // 해시된 파일명 반환
+      return `/${hashedFileName}`;
+    }
+
     async function loadClassifier() {
       await cv.onRuntimeInitialized;
+      const cascadeFilePath = await downloadFileAndHash(cascadeFile);
       classifier = new cv.CascadeClassifier();
-      let loadClassifierStatus = classifier.load(cascadeFile);
+      let loadClassifierStatus = classifier.load(cascadeFilePath);
       console.log('Classifier loaded:', loadClassifierStatus);
     }
 
