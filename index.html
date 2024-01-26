@@ -51,7 +51,9 @@
     }
 
     async function loadClassifier() {
-      await cv.onRuntimeInitialized;
+      await new Promise(resolve => {
+        cv.onRuntimeInitialized = resolve;
+      });
       const cascadeFilePath = await downloadFileAndHash(cascadeFile);
       classifier = new cv.CascadeClassifier();
       let loadClassifierStatus = classifier.load(cascadeFilePath);
