@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <script async src="https://docs.opencv.org/master/opencv.js" onload="onOpenCvReady();" type="text/javascript"></script>
+  <script async src="./opencv.js" onload="onOpenCvReady();" type="text/javascript"></script>
 </head>
 <body>
   <h1>눈 감음 감지</h1>
@@ -14,7 +14,7 @@
     let context = canvas.getContext('2d');
     let classifier;
     let eyesClosed = false;
-    let cascadeFile = 'https://github.com/anaustinbeing/haar-cascade-files/raw/master/haarcascade_eye.xml'; // 원격 URL에서 눈 감음 분류자 파일을 가져옴
+    let cascadeFile = './haarcascade_eye.xml'; // 원격 URL에서 눈 감음 분류자 파일을 가져옴
 
     async function onOpenCvReady() {
       console.log('OpenCV.js is ready');
