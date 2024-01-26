@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script async src="https://docs.opencv.org/master/opencv.js" onload="onOpenCvReady();" type="text/javascript"></script>
+</head>
+<body>
+  <h1>눈 감음 감지</h1>
+  <video id="video" width="640" height="480" autoplay></video>
+  <canvas id="canvas" width="640" height="480"></canvas>
+
+  <script type="text/javascript">
+    let video = document.getElementById('video');
+    let canvas = document.getElementById('canvas');
+    let context = canvas.getContext('2d');
+    let classifier;
+    let eyesClosed = false;
+    let cascadeFile = 'https://github.com/anaustinbeing/haar-cascade-files/raw/master/haarcascade_eye.xml'; // 원격 URL에서 눈 감음 분류자 파일을 가져옴
+
+    async function onOpenCvReady() {
+      console.log('OpenCV.js is ready');
+      await loadClassifier();
+      requestCameraPermission();
+    }
+
+    async function loadClassifier() {
+      await cv.onRuntimeInitialized;
+      classifier = new cv.CascadeClassifier();
+      let loadClassifierStatus = classifier.load(cascadeFile);
+      console.log('Classifier loaded:', loadClassifierStatus);
+    }
+
+    function requestCameraPermission() {
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then(function (stream) {
+          video.srcObject = stream;
+          video.play();
+          detectEyes();
+        })
+        .catch(function (err) {
+          console.error('Error accessing the camera:', err);
+        });
+    }
+
+    function detectEyes() {
+      const FPS = 30;
+      setInterval(function () {
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        let src = cv.imread(canvas);
+        let gray = new cv.Mat();
+        cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+        let eyes = new cv.RectVector();
+        classifier.detectMultiScale(gray, eyes);
+        
+        if (eyes.size() === 0) {
+          if (!eyesClosed) {
+            console.log('눈을 감음 감지');
+            eyesClosed = true;
+          }
+        } else {
+          eyesClosed = false;
+        }
+
+        src.delete();
+        gray.delete();
+        eyes.delete();
+      }, 1000 / FPS);
+    }
+  </script>
+</body>
+</html>
